@@ -232,6 +232,62 @@ pycurl_ssl_cleanup(void)
 }
 #endif
 
+/* mbedTLS */
+
+#ifdef PYCURL_NEED_MBEDTLS_TSL
+static int
+pycurl_ssl_mutex_init(void **m)
+{
+    if ((*((PyThread_type_lock *) m) = PyThread_allocate_lock()) == NULL) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+static int
+pycurl_ssl_mutex_destroy(void **m)
+{
+    PyThread_free_lock(*((PyThread_type_lock *) m));
+    return 0;
+}
+
+static int
+pycurl_ssl_mutex_lock(void **m)
+{
+    return !PyThread_acquire_lock(*((PyThread_type_lock *) m), 1);
+}
+
+static int
+pycurl_ssl_mutex_unlock(void **m)
+{
+    PyThread_release_lock(*((PyThread_type_lock *) m));
+    return 0;
+}
+
+static struct gcry_thread_cbs pycurl_mbedtls_tsl = {
+    GCRY_THREAD_OPTION_USER,
+    NULL,
+    pycurl_ssl_mutex_init,
+    pycurl_ssl_mutex_free,
+    pycurl_ssl_mutex_lock,
+    pycurl_ssl_mutex_unlock
+};
+
+PYCURL_INTERNAL int
+pycurl_ssl_init(void)
+{
+    gcry_control(GCRYCTL_SET_THREAD_CBS, &pycurl_mbedtls_tsl);
+    return 0;
+}
+
+PYCURL_INTERNAL void
+pycurl_ssl_cleanup(void)
+{
+    return;
+}
+#endif
+
 /*************************************************************************
 // CurlShareObject
 **************************************************************************/

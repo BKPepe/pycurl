@@ -265,13 +265,6 @@ pycurl_ssl_mutex_unlock(void **m)
     return 0;
 }
 
-static struct gcry_thread_cbs pycurl_mbedtls_tsl = {
-    pycurl_ssl_mutex_create,
-    pycurl_ssl_mutex_destroy,
-    pycurl_ssl_mutex_lock,
-    pycurl_ssl_mutex_unlock
-};
-
 PYCURL_INTERNAL int
 pycurl_ssl_init(void)
 {
